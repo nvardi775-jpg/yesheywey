@@ -1,7 +1,5 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
-import sqlite3 from "sqlite3";
-import { open } from "sqlite";
 import { GoogleGenAI, Type } from "@google/genai";
 import path from "path";
 
@@ -11,55 +9,132 @@ app.use(express.json());
 // Initialize SQLite database
 let db: any;
 const dbPromise = (async () => {
-  try {
-    db = await open({
-      filename: path.join(process.cwd(), 'database.sqlite'),
-      driver: sqlite3.Database
-    });
-  } catch (err: any) {
-    console.error("Failed to open physical SQLite database, falling back to in-memory database:", err);
-    db = await open({
-      filename: ':memory:',
-      driver: sqlite3.Database
-    });
-  }
+  if (process.env.VERCEL) {
+    // Elegant in-memory mock database for Vercel to bypass native sqlite3 dependency
+    const inMemoryDB = {
+      users: [
+        { username: 'admin', password: '', role: 'admin', createdAt: Date.now() }
+      ],
+      patients: [] as any[],
 
-  try {
-    // Create tables if they don't exist
-    await db.exec(`
-      CREATE TABLE IF NOT EXISTS users (
-        username TEXT PRIMARY KEY,
-        password TEXT,
-        role TEXT,
-        createdAt INTEGER
-      );
+      async all(query: string, params: any[] = []) {
+        if (query.includes('FROM users')) {
+          return this.users;
+        } else if (query.includes('FROM patients')) {
+          return this.patients;
+        }
+        return [];
+      },
 
-      CREATE TABLE IF NOT EXISTS patients (
-        id TEXT PRIMARY KEY,
-        patientName TEXT,
-        age TEXT,
-        sex TEXT,
-        address TEXT,
-        complaint TEXT,
-        symptoms TEXT,
-        selectedSymptoms TEXT,
-        tongue TEXT,
-        pulse TEXT,
-        diagnosis TEXT,
-        timestamp INTEGER,
-        medicalHistory TEXT,
-        biomedicalDiagnosis TEXT,
-        icd10 TEXT
-      );
-    `);
+      async run(query: string, params: any[] = []) {
+        if (query.includes('INSERT INTO users')) {
+          const [username, password, role, createdAt] = params;
+          if (this.users.some(u => u.username === username)) {
+            throw new Error("User already exists");
+          }
+          this.users.push({ username, password, role, createdAt });
+        } else if (query.includes('DELETE FROM users')) {
+          const [username] = params;
+          this.users = this.users.filter(u => u.username !== username);
+        } else if (query.includes('INSERT OR REPLACE INTO patients')) {
+          const [
+            id, patientName, age, sex, address, complaint, symptoms,
+            selectedSymptoms, tongue, pulse, diagnosis, timestamp, medicalHistory, biomedicalDiagnosis, icd10
+          ] = params;
+          const index = this.patients.findIndex(p => p.id === id);
+          const patientObj = {
+            id, patientName, age, sex, address, complaint, symptoms,
+            selectedSymptoms, tongue, pulse, diagnosis, timestamp, medicalHistory, biomedicalDiagnosis, icd10
+          };
+          if (index >= 0) {
+            this.patients[index] = patientObj;
+          } else {
+            this.patients.push(patientObj);
+          }
+        } else if (query.includes('DELETE FROM patients')) {
+          const [id] = params;
+          this.patients = this.patients.filter(p => p.id !== id);
+        }
+        return { lastID: Date.now(), changes: 1 };
+      },
 
-    // Seed default admin if not exists
-    const adminExists = await db.get('SELECT * FROM users WHERE username = ?', ['admin']);
-    if (!adminExists) {
-      await db.run('INSERT INTO users (username, password, role, createdAt) VALUES (?, ?, ?, ?)', ['admin', '', 'admin', Date.now()]);
+      async get(query: string, params: any[] = []) {
+        if (query.includes('FROM users WHERE username = ?')) {
+          const [username] = params;
+          return this.users.find(u => u.username === username) || null;
+        }
+        return null;
+      },
+
+      async exec(query: string) {
+        return true;
+      }
+    };
+    db = inMemoryDB;
+    console.log("Database initialized using Vercel Serverless In-Memory Fallback");
+  } else {
+    try {
+      const sqlite3Module = await import("sqlite3");
+      const sqliteModule = await import("sqlite");
+      
+      db = await sqliteModule.open({
+        filename: path.join(process.cwd(), 'database.sqlite'),
+        driver: sqlite3Module.default.Database
+      });
+      console.log("Database initialized using SQLite on local server");
+    } catch (err: any) {
+      console.error("Failed to open physical SQLite database, falling back to in-memory database:", err);
+      try {
+        const sqlite3Module = await import("sqlite3");
+        const sqliteModule = await import("sqlite");
+        db = await sqliteModule.open({
+          filename: ':memory:',
+          driver: sqlite3Module.default.Database
+        });
+      } catch (innerErr: any) {
+        console.error("Critical: Could not load sqlite3 dynamically:", innerErr);
+      }
     }
-  } catch (err: any) {
-    console.error("Failed to initialize database tables or seed data:", err);
+
+    if (db) {
+      try {
+        // Create tables if they don't exist
+        await db.exec(`
+          CREATE TABLE IF NOT EXISTS users (
+            username TEXT PRIMARY KEY,
+            password TEXT,
+            role TEXT,
+            createdAt INTEGER
+          );
+
+          CREATE TABLE IF NOT EXISTS patients (
+            id TEXT PRIMARY KEY,
+            patientName TEXT,
+            age TEXT,
+            sex TEXT,
+            address TEXT,
+            complaint TEXT,
+            symptoms TEXT,
+            selectedSymptoms TEXT,
+            tongue TEXT,
+            pulse TEXT,
+            diagnosis TEXT,
+            timestamp INTEGER,
+            medicalHistory TEXT,
+            biomedicalDiagnosis TEXT,
+            icd10 TEXT
+          );
+        `);
+
+        // Seed default admin if not exists
+        const adminExists = await db.get('SELECT * FROM users WHERE username = ?', ['admin']);
+        if (!adminExists) {
+          await db.run('INSERT INTO users (username, password, role, createdAt) VALUES (?, ?, ?, ?)', ['admin', '', 'admin', Date.now()]);
+        }
+      } catch (err: any) {
+        console.error("Failed to initialize database tables or seed data:", err);
+      }
+    }
   }
 })();
 
