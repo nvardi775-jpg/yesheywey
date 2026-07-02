@@ -1,5 +1,4 @@
 import express from "express";
-import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import path from "path";
 
@@ -74,8 +73,10 @@ const dbPromise = (async () => {
     console.log("Database initialized using Vercel Serverless In-Memory Fallback");
   } else {
     try {
-      const sqlite3Module = await import("sqlite3");
-      const sqliteModule = await import("sqlite");
+      const sqlite3Name = "sqlite3";
+      const sqliteName = "sqlite";
+      const sqlite3Module = await import(sqlite3Name);
+      const sqliteModule = await import(sqliteName);
       
       db = await sqliteModule.open({
         filename: path.join(process.cwd(), 'database.sqlite'),
@@ -85,8 +86,10 @@ const dbPromise = (async () => {
     } catch (err: any) {
       console.error("Failed to open physical SQLite database, falling back to in-memory database:", err);
       try {
-        const sqlite3Module = await import("sqlite3");
-        const sqliteModule = await import("sqlite");
+        const sqlite3Name = "sqlite3";
+        const sqliteName = "sqlite";
+        const sqlite3Module = await import(sqlite3Name);
+        const sqliteModule = await import(sqliteName);
         db = await sqliteModule.open({
           filename: ':memory:',
           driver: sqlite3Module.default.Database
@@ -515,6 +518,8 @@ async function startServer() {
   if (!process.env.VERCEL) {
     // Vite middleware for development
     if (process.env.NODE_ENV !== "production") {
+      const viteName = "vite";
+      const { createServer: createViteServer } = await import(viteName);
       const vite = await createViteServer({
         server: { middlewareMode: true },
         appType: "spa",
