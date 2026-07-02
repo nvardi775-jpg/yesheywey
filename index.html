@@ -1,0 +1,256 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TCM WuXing Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["'Plus Jakarta Sans'", "sans-serif"],
+              display: ["'Space Grotesk'", "sans-serif"],
+              mono: ["'JetBrains Mono'", "monospace"]
+            },
+            colors: {
+              tcm: {
+                primary: '#6366f1', // Bright Indigo/Blue-Purple
+                secondary: '#8b5cf6', // Bright Purple/Violet
+                accent: '#a5b4fc', // Pastel Purple-Blue
+                dark: '#060813', // Main background deep dark navy/purple
+                light: '#111428', // Card background dark blue-purple
+              }
+            },
+            animation: {
+              'flow': 'flow 1.5s linear infinite',
+              'spin-slow': 'spin 4s linear infinite',
+              'vibrate': 'vibrate 0.3s linear infinite',
+              'pulse-soft': 'pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            },
+            keyframes: {
+              vibrate: {
+                '0%, 100%': { transform: 'translateX(0)' },
+                '25%': { transform: 'translateX(-1px)' },
+                '75%': { transform: 'translateX(1px)' },
+              },
+              'pulse-soft': {
+                '0%, 100%': { opacity: '1', transform: 'scale(1)' },
+                '50%': { opacity: '0.5', transform: 'scale(0.98)' },
+              },
+              typing: {
+                '0%, 100%': { transform: 'translateY(0px)' },
+                '20%': { transform: 'translateY(-5px)' },
+                '40%': { transform: 'translateY(0px)' },
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      /* Google Fonts Integration */
+      @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+      /* Global Typography Overrides */
+      html, body, #root, select, input, textarea, button {
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+      }
+      h1, h2, h3, h4, h5, h6, .font-black {
+        font-family: 'Space Grotesk', -apple-system, sans-serif !important;
+        letter-spacing: -0.02em !important;
+      }
+
+      /* Dark Blue-Purple Visual Identity Overrides */
+      body, .bg-purple-50 {
+        background-color: #060813 !important;
+        color: #f1f5f9 !important;
+      }
+      
+      /* Card, sidebar, modal backgrounds */
+      .bg-white {
+        background-color: #111428 !important;
+      }
+      .bg-white\/50 {
+        background-color: rgba(17, 20, 40, 0.5) !important;
+        backdrop-filter: blur(12px) !important;
+      }
+      .bg-white\/80 {
+        background-color: rgba(17, 20, 40, 0.8) !important;
+        backdrop-filter: blur(12px) !important;
+      }
+      
+      /* Borders */
+      .border-purple-100, .border-purple-200, .border-purple-300, .border-slate-100 {
+        border-color: #1c203a !important;
+      }
+
+      /* Hover states */
+      .hover\:bg-purple-50:hover, .hover\:bg-purple-100:hover, .hover\:bg-slate-50:hover {
+        background-color: #1c203a !important;
+      }
+
+      /* --- PURPLE (TCM MAIN COLOR & BEN SECTIONS) --- */
+      .bg-purple-50 { background-color: #060813 !important; }
+      .bg-purple-100 { background-color: #17122a !important; }
+      .bg-purple-50\/50, .bg-purple-100\/50, .bg-purple-50\/30 { background-color: #131126 !important; }
+      .border-purple-100, .border-purple-200, .border-purple-300 { border-color: #2b2254 !important; }
+      .text-purple-950, .text-purple-900 { color: #f1f5f9 !important; }
+      .text-purple-800, .text-purple-700 { color: #c7bbf4 !important; }
+      .text-purple-600, .text-purple-500 { color: #9d8df1 !important; }
+      .text-purple-400 { color: #8a88a0 !important; }
+
+      /* --- AMBER (BIAO SECTIONS) --- */
+      .bg-amber-50 { background-color: #0c0803 !important; }
+      .bg-amber-100 { background-color: #281907 !important; }
+      .bg-amber-50\/50, .bg-amber-100\/50, .bg-amber-50\/30 { background-color: #201405 !important; }
+      .border-amber-100, .border-amber-200, .border-amber-300 { border-color: #4b300f !important; }
+      .text-amber-950, .text-amber-900 { color: #fef3c7 !important; }
+      .text-amber-800, .text-amber-700 { color: #fde047 !important; }
+      .text-amber-600, .text-amber-500 { color: #fbbf24 !important; }
+      .text-amber-400 { color: #fcd34d !important; }
+
+      /* --- EMERALD (HERBAL & CLINICAL PRINCIPLES) --- */
+      .bg-emerald-50 { background-color: #020f0a !important; }
+      .bg-emerald-100 { background-color: #0a2518 !important; }
+      .bg-emerald-50\/50, .bg-emerald-100\/50, .bg-emerald-50\/30 { background-color: #081d13 !important; }
+      .border-emerald-100, .border-emerald-200, .border-emerald-300 { border-color: #123e25 !important; }
+      .text-emerald-950, .text-emerald-900 { color: #ecfdf5 !important; }
+      .text-emerald-800, .text-emerald-700 { color: #a7f3d0 !important; }
+      .text-emerald-600, .text-emerald-500 { color: #34d399 !important; }
+      .text-emerald-400 { color: #6ee7b7 !important; }
+
+      /* --- ROSE (LIFESTYLE & EMOTIONAL ADVICE) --- */
+      .bg-rose-50 { background-color: #0f0307 !important; }
+      .bg-rose-100 { background-color: #2c0816 !important; }
+      .bg-rose-50\/50, .bg-rose-100\/50, .bg-rose-50\/30 { background-color: #220510 !important; }
+      .border-rose-100, .border-rose-200, .border-rose-300 { border-color: #4e122b !important; }
+      .text-rose-950, .text-rose-900 { color: #fff1f2 !important; }
+      .text-rose-800, .text-rose-700 { color: #fecdd3 !important; }
+      .text-rose-600, .text-rose-500 { color: #fb7185 !important; }
+      .text-rose-400 { color: #fda4af !important; }
+
+      /* --- TEAL (OBESITY) --- */
+      .bg-teal-50 { background-color: #010f10 !important; }
+      .bg-teal-100 { background-color: #072528 !important; }
+      .bg-teal-50\/50, .bg-teal-100\/50 { background-color: #051d20 !important; }
+      .border-teal-100, .border-teal-200 { border-color: #0e3d42 !important; }
+      .text-teal-950, .text-teal-900 { color: #f0fdfa !important; }
+      .text-teal-800, .text-teal-700 { color: #ccfbf1 !important; }
+      .text-teal-600, .text-teal-500 { color: #2dd4bf !important; }
+
+      /* --- PINK (BEAUTY) --- */
+      .bg-pink-50 { background-color: #0f030d !important; }
+      .bg-pink-100 { background-color: #2c0821 !important; }
+      .bg-pink-50\/50, .bg-pink-100\/50 { background-color: #220518 !important; }
+      .border-pink-100, .border-pink-200 { border-color: #4e123a !important; }
+      .text-pink-950, .text-pink-900 { color: #fdf2f8 !important; }
+      .text-pink-800, .text-pink-700 { color: #fce7f3 !important; }
+      .text-pink-600, .text-pink-500 { color: #f472b6 !important; }
+
+      /* Backgrounds for secondary items/sections */
+      .bg-slate-100, .bg-gray-100 {
+        background-color: #1c203a !important;
+      }
+
+      /* Input elements */
+      input, select, textarea {
+        background-color: #0d0f1f !important;
+        color: #f8fafc !important;
+        border-color: #23294c !important;
+      }
+      input::placeholder, textarea::placeholder {
+        color: #64748b !important;
+      }
+
+      /* Special interactive buttons / sidebar tabs active state */
+      .bg-purple-600 {
+        background-color: #4f46e5 !important; /* Rich deep indigo-purple */
+        color: #ffffff !important;
+      }
+      .bg-purple-600:hover {
+        background-color: #4338ca !important;
+      }
+      .text-tcm-primary {
+        color: #818cf8 !important;
+      }
+      
+      /* Table styling */
+      thead, .bg-purple-50 {
+        background-color: #0c0e1e !important;
+      }
+      tr:hover {
+        background-color: #161a33 !important;
+      }
+
+      /* Scrollbar settings */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #060813;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #23294c;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #4f46e5;
+      }
+
+      .scrollbar-hide::-webkit-scrollbar { display: none; }
+      .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+      @keyframes flow {
+        from { stroke-dashoffset: 20; }
+        to { stroke-dashoffset: 0; }
+      }
+      .animate-flow {
+        stroke-dasharray: 5, 5;
+        animation: flow 1s linear infinite;
+      }
+      
+      .path-overacting {
+        stroke-width: 4px;
+        filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.8));
+      }
+      
+      .path-insulting {
+        stroke-dasharray: 2, 2;
+      }
+
+      .dot-typing {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: currentColor;
+        margin-right: 3px;
+        animation: typing 1s infinite ease-in-out;
+      }
+      .dot-typing:nth-child(2) { animation-delay: 0.2s; }
+      .dot-typing:nth-child(3) { animation-delay: 0.4s; }
+
+      @keyframes typing {
+        0%, 100% { transform: translateY(0px); }
+        20% { transform: translateY(-5px); }
+        40% { transform: translateY(0px); }
+      }
+
+      @media print {
+        html, body, #root, .h-screen, .h-full { height: auto !important; overflow: visible !important; }
+        body { background-color: white !important; color: black !important; }
+        .print\:hidden { display: none !important; }
+        * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      }
+    </style>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-purple-50 text-purple-950 h-screen overflow-hidden print:h-auto print:overflow-visible">
+    <div id="root" class="h-full print:h-auto"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
