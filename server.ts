@@ -97,6 +97,51 @@ function getGeminiClient(apiKeys?: any[]) {
   });
 }
 
+// Helper to call generateContent with automatic model fallback and retries
+async function generateContentWithFallback(ai: any, params: any) {
+  const modelsToTry = [
+    params.model || 'gemini-3.5-flash',
+    'gemini-flash-latest'
+  ];
+
+  let lastError: any = null;
+
+  for (const model of modelsToTry) {
+    let retries = 2;
+    let delay = 1000;
+    while (retries >= 0) {
+      try {
+        console.log(`Attempting Gemini call with model: ${model} (Retries left: ${retries})`);
+        const response = await ai.models.generateContent({
+          ...params,
+          model: model,
+        });
+        console.log(`Gemini call succeeded with model: ${model}`);
+        return response;
+      } catch (err: any) {
+        lastError = err;
+        console.warn(`Error using model ${model}:`, err);
+        const errMsg = (err.message || '').toLowerCase();
+        const isTransient = errMsg.includes('503') || 
+                            errMsg.includes('unavailable') || 
+                            errMsg.includes('429') || 
+                            errMsg.includes('exhausted') || 
+                            errMsg.includes('demand');
+        if (isTransient && retries > 0) {
+          retries--;
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          delay *= 1.5; // exponential backoff
+        } else {
+          // Break inner loop to try the next fallback model
+          break;
+        }
+      }
+    }
+  }
+
+  throw lastError || new Error("Failed to generate content with any available model.");
+}
+
   // Tongue Analysis Proxy
   app.post("/api/gemini/analyze-tongue", async (req, res) => {
     try {
@@ -126,8 +171,7 @@ function getGeminiClient(apiKeys?: any[]) {
   Hanya jawab berdasarkan foto lidah ini, jangan tambah-tambah.
   `;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.5-flash',
+      const response = await generateContentWithFallback(ai, {
         contents: {
           parts: [
             { text: prompt },
@@ -201,8 +245,7 @@ KECANTIKAN: Berikan saran jika relevan.
 Bahasa: ${language || "English"}.
 HANYA kembalikan JSON. Jangan ada teks lain sebelum atau sesudah JSON.`;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.5-flash',
+      const response = await generateContentWithFallback(ai, {
         contents: contents,
         config: {
           systemInstruction,
