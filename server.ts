@@ -162,7 +162,12 @@ function getGeminiClient(apiKeys?: any[]) {
   }
 
   if (!keyToUse) {
-    throw new Error("No Gemini API key found. Silakan tambahkan API Key di menu Settings.");
+    throw new Error(
+      "Sistem tidak menemukan API Key Gemini yang aktif.\n\n" +
+      "Cara memperbaiki:\n" +
+      "1. Jika menggunakan Vercel: Masuk ke Dashboard Vercel > Settings > Environment Variables, lalu tambahkan variabel baru dengan nama GEMINI_API_KEY.\n" +
+      "2. Atau, klik menu 'Master Control' di pojok kiri bawah aplikasi ini, masuk ke tab 'System Settings', dan tambahkan API Key Gemini Anda di sana."
+    );
   }
 
   return new GoogleGenAI({
@@ -240,8 +245,10 @@ async function generateContentWithFallback(ai: any, params: any) {
   throw lastError || new Error("Failed to generate content with any available model.");
 }
 
+  const apiRouter = express.Router();
+
   // Tongue Analysis Proxy
-  app.post("/api/gemini/analyze-tongue", async (req, res) => {
+  apiRouter.post("/gemini/analyze-tongue", async (req, res) => {
     try {
       const { base64Image, apiKeys } = req.body;
       if (!base64Image) {
@@ -290,12 +297,16 @@ async function generateContentWithFallback(ai: any, params: any) {
       res.json({ text: response.text || "Maaf, tidak dapat menganalisis gambar ini." });
     } catch (e: any) {
       console.error("Server Tongue Analysis Error:", e);
-      res.status(500).json({ error: e.message || "Gagal melakukan analisis lidah." });
+      let errorMsg = e.message || String(e);
+      if (errorMsg.includes("API key not valid") || errorMsg.includes("API_KEY_INVALID")) {
+        errorMsg = "API Key Gemini tidak valid. Silakan periksa kembali kunci yang Anda masukkan di menu Settings atau dashboard Vercel.";
+      }
+      res.status(500).json({ error: errorMsg });
     }
   });
 
   // Diagnose/Chat Proxy
-  app.post("/api/gemini/diagnose", async (req, res) => {
+  apiRouter.post("/gemini/diagnose", async (req, res) => {
     try {
       const { message, image, history, language, cdssAnalysis, apiKeys } = req.body;
       
@@ -429,14 +440,18 @@ HANYA kembalikan JSON. Jangan ada teks lain sebelum atau sesudah JSON.`;
       res.json({ text: response.text });
     } catch (e: any) {
       console.error("Server Diagnostics Error:", e);
-      res.status(500).json({ error: e.message || "Gagal memproses diagnosis dari AI." });
+      let errorMsg = e.message || String(e);
+      if (errorMsg.includes("API key not valid") || errorMsg.includes("API_KEY_INVALID")) {
+        errorMsg = "API Key Gemini tidak valid. Silakan periksa kembali kunci yang Anda masukkan di menu Settings atau dashboard Vercel.";
+      }
+      res.status(500).json({ error: errorMsg });
     }
   });
 
   // --- API Routes ---
 
   // Users API
-  app.get("/api/users", async (req, res) => {
+  apiRouter.get("/users", async (req, res) => {
     try {
       const users = await db.all('SELECT * FROM users');
       res.json(users || []);
@@ -446,7 +461,7 @@ HANYA kembalikan JSON. Jangan ada teks lain sebelum atau sesudah JSON.`;
     }
   });
 
-  app.post("/api/users", async (req, res) => {
+  apiRouter.post("/users", async (req, res) => {
     const { username, password, role, createdAt } = req.body;
     try {
       await db.run('INSERT INTO users (username, password, role, createdAt) VALUES (?, ?, ?, ?)', [username, password, role, createdAt]);
@@ -457,7 +472,7 @@ HANYA kembalikan JSON. Jangan ada teks lain sebelum atau sesudah JSON.`;
     }
   });
 
-  app.delete("/api/users/:username", async (req, res) => {
+  apiRouter.delete("/users/:username", async (req, res) => {
     try {
       await db.run('DELETE FROM users WHERE username = ?', [req.params.username]);
       res.json({ success: true });
@@ -468,7 +483,7 @@ HANYA kembalikan JSON. Jangan ada teks lain sebelum atau sesudah JSON.`;
   });
 
   // Patients API
-  app.get("/api/patients", async (req, res) => {
+  apiRouter.get("/patients", async (req, res) => {
     try {
       const patients = await db.all('SELECT * FROM patients ORDER BY timestamp DESC');
       // Parse JSON fields back to objects
@@ -486,7 +501,7 @@ HANYA kembalikan JSON. Jangan ada teks lain sebelum atau sesudah JSON.`;
     }
   });
 
-  app.post("/api/patients", async (req, res) => {
+  apiRouter.post("/patients", async (req, res) => {
     const p = req.body;
     try {
       await db.run(`
@@ -504,7 +519,7 @@ HANYA kembalikan JSON. Jangan ada teks lain sebelum atau sesudah JSON.`;
     }
   });
 
-  app.delete("/api/patients/:id", async (req, res) => {
+  apiRouter.delete("/patients/:id", async (req, res) => {
     try {
       await db.run('DELETE FROM patients WHERE id = ?', [req.params.id]);
       res.json({ success: true });
@@ -513,6 +528,10 @@ HANYA kembalikan JSON. Jangan ada teks lain sebelum atau sesudah JSON.`;
       res.status(500).json({ error: e.message || "Failed to delete patient" });
     }
   });
+
+  // Mount the router on both "/api" and "/" to handle Vercel routing variations flawlessly
+  app.use("/api", apiRouter);
+  app.use("/", apiRouter);
 
 async function startServer() {
   if (!process.env.VERCEL) {
