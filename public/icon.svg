@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <!-- Definitions for Gradients and Glow Effects -->
+  <defs>
+    <radialGradient id="bgGlow" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+      <stop offset="0%" stop-color="#1e1b4b" stop-opacity="1" />
+      <stop offset="100%" stop-color="#060813" stop-opacity="1" />
+    </radialGradient>
+    <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1" />
+      <stop offset="50%" stop-color="#8b5cf6" />
+      <stop offset="100%" stop-color="#3b82f6" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background Card Circle -->
+  <circle cx="256" cy="256" r="240" fill="url(#bgGlow)" stroke="url(#borderGrad)" stroke-width="12" />
+
+  <!-- Inner Pentagonal Star Pattern (Wu Xing Cycles) -->
+  <g filter="url(#glow)">
+    <!-- Generation Cycle (Outer Pentagon) -->
+    <polygon points="256,90 396,192 342,358 170,358 116,192" 
+             fill="none" 
+             stroke="#a5b4fc" 
+             stroke-width="3" 
+             stroke-dasharray="6,6" 
+             opacity="0.4" />
+             
+    <!-- Controlling Cycle (Inner Star) -->
+    <polygon points="256,90 342,358 116,192 396,192 170,358" 
+             fill="none" 
+             stroke="#f43f5e" 
+             stroke-width="2" 
+             opacity="0.3" />
+  </g>
+
+  <!-- FIVE ELEMENTS INTERACTIVE NODES (with elegant colored glow rings) -->
+  
+  <!-- 1. WOOD (Mu) - Top Left - Green -->
+  <g>
+    <circle cx="116" cy="192" r="34" fill="#022c22" stroke="#10b981" stroke-width="4" filter="url(#glow)" />
+    <circle cx="116" cy="192" r="22" fill="#10b981" />
+    <text x="116" y="196" font-family="'Space Grotesk', system-ui, sans-serif" font-size="14" font-weight="900" fill="#ffffff" text-anchor="middle">木</text>
+  </g>
+
+  <!-- 2. FIRE (Huo) - Top Center - Red -->
+  <g>
+    <circle cx="256" cy="90" r="34" fill="#4c0519" stroke="#f43f5e" stroke-width="4" filter="url(#glow)" />
+    <circle cx="256" cy="90" r="22" fill="#f43f5e" />
+    <text x="256" y="94" font-family="'Space Grotesk', system-ui, sans-serif" font-size="14" font-weight="900" fill="#ffffff" text-anchor="middle">火</text>
+  </g>
+
+  <!-- 3. EARTH (Tu) - Top Right - Yellow/Amber -->
+  <g>
+    <circle cx="396" cy="192" r="34" fill="#451a03" stroke="#f59e0b" stroke-width="4" filter="url(#glow)" />
+    <circle cx="396" cy="192" r="22" fill="#f59e0b" />
+    <text x="396" y="196" font-family="'Space Grotesk', system-ui, sans-serif" font-size="14" font-weight="900" fill="#ffffff" text-anchor="middle">土</text>
+  </g>
+
+  <!-- 4. METAL (Jin) - Bottom Right - Silver/White -->
+  <g>
+    <circle cx="342" cy="358" r="34" fill="#1e293b" stroke="#e2e8f0" stroke-width="4" filter="url(#glow)" />
+    <circle cx="342" cy="358" r="22" fill="#cbd5e1" />
+    <text x="342" y="362" font-family="'Space Grotesk', system-ui, sans-serif" font-size="14" font-weight="900" fill="#0f172a" text-anchor="middle">金</text>
+  </g>
+
+  <!-- 5. WATER (Shui) - Bottom Left - Blue -->
+  <g>
+    <circle cx="170" cy="358" r="34" fill="#172554" stroke="#3b82f6" stroke-width="4" filter="url(#glow)" />
+    <circle cx="170" cy="358" r="22" fill="#3b82f6" />
+    <text x="170" y="362" font-family="'Space Grotesk', system-ui, sans-serif" font-size="14" font-weight="900" fill="#ffffff" text-anchor="middle">水</text>
+  </g>
+
+  <!-- Center Yin Yang Core Balance Emblem -->
+  <g filter="url(#glow)" opacity="0.85">
+    <circle cx="256" cy="240" r="36" fill="#111428" stroke="#8b5cf6" stroke-width="3" />
+    <!-- Yin half -->
+    <path d="M 256,204 A 18,18 0 0,0 256,240 A 18,18 0 0,1 256,276 A 36,36 0 0,0 256,204 Z" fill="#8b5cf6" />
+    <!-- Yang half is the negative space -->
+    <circle cx="256" cy="222" r="4" fill="#ffffff" />
+    <circle cx="256" cy="258" r="4" fill="#8b5cf6" />
+  </g>
+</svg>

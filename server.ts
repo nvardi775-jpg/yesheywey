@@ -5,17 +5,15 @@ import { open } from "sqlite";
 import { GoogleGenAI, Type } from "@google/genai";
 import path from "path";
 
-async function startServer() {
-  const app = express();
-  const PORT = 3000;
+const app = express();
+app.use(express.json());
 
-  app.use(express.json());
-
-  // Initialize SQLite database
-  let db;
+// Initialize SQLite database
+let db: any;
+const dbPromise = (async () => {
   try {
     db = await open({
-      filename: './database.sqlite',
+      filename: path.join(process.cwd(), 'database.sqlite'),
       driver: sqlite3.Database
     });
   } catch (err: any) {
@@ -63,36 +61,41 @@ async function startServer() {
   } catch (err: any) {
     console.error("Failed to initialize database tables or seed data:", err);
   }
+})();
 
-  // --- Gemini API Proxy Routes ---
+// Ensure database is initialized before handling requests
+app.use(async (req, res, next) => {
+  await dbPromise;
+  next();
+});
 
-  // Lazy initializer helper
-  function getGeminiClient(apiKeys?: any[]) {
-    let keyToUse = "";
-    if (apiKeys && apiKeys.length > 0) {
-      const availableKey = apiKeys.find((k: any) => !k.isExhausted && k.key && k.key.trim() !== "");
-      if (availableKey) {
-        keyToUse = availableKey.key;
-      }
+// Lazy initializer helper
+function getGeminiClient(apiKeys?: any[]) {
+  let keyToUse = "";
+  if (apiKeys && apiKeys.length > 0) {
+    const availableKey = apiKeys.find((k: any) => !k.isExhausted && k.key && k.key.trim() !== "");
+    if (availableKey) {
+      keyToUse = availableKey.key;
     }
-
-    if (!keyToUse) {
-      keyToUse = process.env.GEMINI_API_KEY || "";
-    }
-
-    if (!keyToUse) {
-      throw new Error("No Gemini API key found. Silakan tambahkan API Key di menu Settings.");
-    }
-
-    return new GoogleGenAI({
-      apiKey: keyToUse,
-      httpOptions: {
-        headers: {
-          'User-Agent': 'aistudio-build',
-        }
-      }
-    });
   }
+
+  if (!keyToUse) {
+    keyToUse = process.env.GEMINI_API_KEY || "";
+  }
+
+  if (!keyToUse) {
+    throw new Error("No Gemini API key found. Silakan tambahkan API Key di menu Settings.");
+  }
+
+  return new GoogleGenAI({
+    apiKey: keyToUse,
+    httpOptions: {
+      headers: {
+        'User-Agent': 'aistudio-build',
+      }
+    }
+  });
+}
 
   // Tongue Analysis Proxy
   app.post("/api/gemini/analyze-tongue", async (req, res) => {
@@ -370,24 +373,30 @@ HANYA kembalikan JSON. Jangan ada teks lain sebelum atau sesudah JSON.`;
     }
   });
 
-  // Vite middleware for development
-  if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*all', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
+async function startServer() {
+  if (!process.env.VERCEL) {
+    // Vite middleware for development
+    if (process.env.NODE_ENV !== "production") {
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: "spa",
+      });
+      app.use(vite.middlewares);
+    } else {
+      const distPath = path.join(process.cwd(), 'dist');
+      app.use(express.static(distPath));
+      app.get('*all', (req, res) => {
+        res.sendFile(path.join(distPath, 'index.html'));
+      });
+    }
+
+    const PORT = 3000;
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server running on http://localhost:${PORT}`);
     });
   }
-
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
 }
 
 startServer();
+
+export default app;

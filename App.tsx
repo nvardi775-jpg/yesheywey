@@ -21,6 +21,7 @@ import AcupuncturePointsPanel from './components/AcupuncturePointsPanel';
 import InvoiceGeneratorPanel from './components/InvoiceGeneratorPanel';
 import BMIKomplitPanel from './components/BMIKomplitPanel';
 import { exportDiagnosisToPDF, exportConversationToPDF } from '@/src/utils/pdfExport';
+import { PatientOverviewPanel } from './components/PatientOverviewPanel';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -477,6 +478,15 @@ const App: React.FC = () => {
                 }
                 return null;
               })()}
+
+              {/* Patient Overview Summary Panel */}
+              {lastPatientForm && (
+                <PatientOverviewPanel 
+                  patient={lastPatientForm} 
+                  appLanguage={appLanguage} 
+                  onClear={() => setLastPatientForm(null)} 
+                />
+              )}
               
               {messages.map(msg => (
                 <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
