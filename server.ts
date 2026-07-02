@@ -99,10 +99,30 @@ function getGeminiClient(apiKeys?: any[]) {
 
 // Helper to call generateContent with automatic model fallback and retries
 async function generateContentWithFallback(ai: any, params: any) {
+  const requestedModel = params.model;
+  
+  // Create a priority list of models. We prefer the standard highly-available 'gemini-2.5-flash'
+  // and 'gemini-2.0-flash' first to avoid 503 Unavailable issues.
   const modelsToTry = [
-    params.model || 'gemini-3.5-flash',
-    'gemini-flash-latest'
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
   ];
+  
+  if (requestedModel && !modelsToTry.includes(requestedModel)) {
+    // Put the user requested model at the front if it's not already in our list,
+    // unless it is the problematic 'gemini-3.5-flash' which we push to the end as fallback.
+    if (requestedModel === 'gemini-3.5-flash') {
+      modelsToTry.push('gemini-3.5-flash');
+    } else {
+      modelsToTry.unshift(requestedModel);
+    }
+  } else if (!requestedModel) {
+    modelsToTry.push('gemini-3.5-flash');
+  }
+
+  // Also append pro models as robust absolute fallbacks
+  modelsToTry.push('gemini-2.5-pro');
 
   let lastError: any = null;
 
